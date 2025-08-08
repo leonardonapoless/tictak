@@ -27,23 +27,23 @@ struct GameView: View {
                 Spacer()
 
                 
-                    
+                let difficulties = ["Easy", "Medium", "Hard"]
                 VStack {
                     Text("Difficulty")
                         .bold()
                         .padding()
                     HStack {
-                        ForEach(0..<3) { i in
+                        ForEach(difficulties, id: \.self) { difficultyText in
                             ZStack {
                                 RoundedRectangle(cornerRadius: 20)
                                     .fill(Color.gray.opacity(0.3))
                                     .frame(width: 100, height: 50)
-                                Text("Easy")
+                                Text(difficultyText)
                                     .font(.headline)
                                     .foregroundColor(.white)
                             }
                             .onTapGesture {
-                                print("difficulty tapped")
+                                print("\(difficultyText) tapped")
                             }
                         }
                     }
