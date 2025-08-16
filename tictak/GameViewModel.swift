@@ -21,6 +21,7 @@ final class GameViewModel: ObservableObject {
     @Published var isGameboardDisable = false
     @Published var alertItem: AlertItem?
     
+    // TODO: Change game difficulty
     
     func processPlayerMove(for position: Int) {
         

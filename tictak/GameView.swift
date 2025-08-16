@@ -26,6 +26,7 @@ struct GameView: View {
                 
                 Spacer()
 
+                // TODO: Implement difficulty view model
                 
                 let difficulties = ["Easy", "Medium", "Hard"]
                 VStack {
