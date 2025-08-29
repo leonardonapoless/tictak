@@ -1,4 +1,4 @@
-A simple tictactoe iOS app project made in Swift/SwiftUI using the MVVM architecture. 
-(work in progress)
+A simple tictactoe iOS app made in Swift and SwiftUI using the MVVM architecture. 
 
-![tictakdemo](https://github.com/user-attachments/assets/70beabf7-9e5f-46c8-a055-64fefa98c6bb)
+
+![tictak_liquid_glass](https://github.com/user-attachments/assets/78a5674b-e740-488d-82ae-4ce37e792c9f)
