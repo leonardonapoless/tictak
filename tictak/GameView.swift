@@ -1,21 +1,11 @@
-//
-//  GameView.swift
-//  tictak
-//
-//  Created by Leonardo Nápoles on 8/5/25.
-//
-
 import SwiftUI
 
 struct GameView: View {
-    
     @StateObject private var viewModel = GameViewModel()
     
     var body: some View {
         GeometryReader { geometry in
             VStack {
-//                Spacer()
-
                 Text("TicTak")
                     .bold()
                     .font(.largeTitle)
@@ -23,36 +13,41 @@ struct GameView: View {
                     .italic()
                     .padding(.bottom, -50)
                 
-                
                 Spacer()
 
-                // TODO: Implement difficulty view model
-                
-                let difficulties = ["Easy", "Medium", "Hard"]
-                VStack {
-                    Text("Difficulty")
-                        .bold()
-                        .padding()
-                    HStack {
-                        ForEach(difficulties, id: \.self) { difficultyText in
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 100, height: 50)
-                                Text(difficultyText)
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                            }
-                            .onTapGesture {
-                                print("\(difficultyText) tapped")
-                            }
-                        }
+                VStack(spacing: 12) {
+                    Menu {
+                        Button(Difficulty.easy.rawValue) { viewModel.selectDifficulty(.easy) }
+                        Button(Difficulty.medium.rawValue) { viewModel.selectDifficulty(.medium) }
+                        Button(Difficulty.hard.rawValue) { viewModel.selectDifficulty(.hard) }
+                    } label: {
+                        GlassRoundedRect(cornerRadius: 16)
+                            .frame(width: 160, height: 44)
+                            .overlay(
+                                Text("Difficulty")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.white.opacity(0.9))
+                            )
                     }
                     
+                    if let difficulty = viewModel.selectedDifficulty {
+                        Text(difficulty.rawValue)
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                            .padding(.vertical, 8)
+                    }
+                    
+                    if viewModel.needsDifficultySelection {
+                        Text("Choose a difficulty to start playing")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .padding(.bottom, 20)
+                
                 Spacer()
                 
-                LazyVGrid(columns: viewModel.columns, spacing: 5) {
+                LazyVGrid(columns: viewModel.columns, spacing: 12) {
                     ForEach(0..<9) { i in
                         ZStack {
                             GameCircleView(proxy: geometry)
@@ -63,15 +58,25 @@ struct GameView: View {
                         }
                     }
                 }
+                .disabled(viewModel.needsDifficultySelection)
+                
                 Spacer()
             }
         }
         .padding()
-        .alert(item: $viewModel.alertItem, content: { alertItem in
-            Alert(title: alertItem.title,
-                  message: alertItem.message,
-                  dismissButton: .default(alertItem.buttonTitle, action: { viewModel.resetGame() }))
-        })
+        .onAppear {
+            viewModel.startNewGame()
+            viewModel.showDifficultyDialog = false
+        }
+        .alert(item: $viewModel.alertItem) { alertItem in
+            Alert(
+                title: alertItem.title,
+                message: alertItem.message,
+                dismissButton: .default(alertItem.buttonTitle) {
+                    viewModel.startNewGame()
+                }
+            )
+        }
         .disabled(viewModel.isGameboardDisable)
     }
 }
@@ -85,35 +90,190 @@ struct Move {
     let boardIndex: Int
     
     var indicator: String {
-        return player == .human ? "xmark" : "circle"
+        player == .human ? "xmark" : "circle"
     }
 }
 
-
-#Preview {
-    GameView()
-}
-
 struct GameCircleView: View {
-    
     var proxy: GeometryProxy
     var body: some View {
-        Circle()
-            .foregroundStyle(.teal).opacity(0.5)
+        GlassCircle()
             .frame(width: proxy.size.width/3 - 15,
                    height: proxy.size.width/3 - 15)
     }
 }
 
 struct PlayerIndicator: View {
-    
-//    Image(systemName: viewModel.moves[i]?.indicator ?? "")
-
     var systemImageName: String
     var body: some View {
         Image(systemName: systemImageName)
             .resizable()
             .frame(width: 40, height: 40)
-            .foregroundStyle(.white)
+            .foregroundStyle(.white.opacity(0.95))
+            .shadow(color: .black.opacity(0.25), radius: 3, x: 0, y: 1)
     }
+}
+
+// MARK: - Liquid Glass Helpers
+
+private struct GlassBackground: View {
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    LinearGradient(
+                        colors: [
+                            .white.opacity(0.18),
+                            .white.opacity(0.06),
+                            .white.opacity(0.02),
+                            .black.opacity(0.08)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    LinearGradient(
+                        colors: [
+                            .white.opacity(0.35),
+                            .white.opacity(0.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .blendMode(.screen)
+                )
+                .overlay(
+                    AngularGradient(
+                        gradient: Gradient(colors: [
+                            .white.opacity(0.12),
+                            .clear,
+                            .white.opacity(0.08),
+                            .clear
+                        ]),
+                        center: .center
+                    )
+                    .blur(radius: 12)
+                    .opacity(0.4)
+                )
+        }
+    }
+}
+
+private struct GlassBackgroundTinted: View {
+    private let tint = Color.green.opacity(0.18)
+    var body: some View {
+        GlassBackground()
+            .overlay(tint)
+    }
+}
+
+private struct GlassStroke: ViewModifier {
+    var cornerRadius: CGFloat
+    var lineWidth: CGFloat = 1.0
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                .white.opacity(0.65),
+                                .white.opacity(0.2)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: lineWidth
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(.black.opacity(0.18), lineWidth: 0.5)
+                    .blur(radius: 1.2)
+                    .mask(
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [.black, .clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                    )
+            )
+            .shadow(color: .black.opacity(0.25), radius: 10, x: 0, y: 6)
+            .shadow(color: .white.opacity(0.25), radius: 2, x: 0, y: -1)
+    }
+}
+
+private struct GlassCircleStroke: ViewModifier {
+    var lineWidth: CGFloat = 1.0
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                Circle()
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                .white.opacity(0.65),
+                                .white.opacity(0.2)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: lineWidth
+                    )
+            )
+            .overlay(
+                Circle()
+                    .stroke(.black.opacity(0.18), lineWidth: 0.5)
+                    .blur(radius: 1.2)
+                    .mask(
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.black, .clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                    )
+            )
+            .shadow(color: .black.opacity(0.25), radius: 10, x: 0, y: 6)
+            .shadow(color: .white.opacity(0.25), radius: 2, x: 0, y: -1)
+    }
+}
+
+struct GlassRoundedRect: View {
+    var cornerRadius: CGFloat = 20
+    var body: some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(.clear)
+            .background(
+                GlassBackground()
+                    .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            )
+            .modifier(GlassStroke(cornerRadius: cornerRadius))
+    }
+}
+
+struct GlassCircle: View {
+    var body: some View {
+        Circle()
+            .fill(.clear)
+            .background(
+                GlassBackgroundTinted()
+                    .clipShape(Circle())
+            )
+            .modifier(GlassCircleStroke())
+    }
+}
+
+
+#Preview {
+    GameView()
 }

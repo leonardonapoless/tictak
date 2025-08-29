@@ -1,10 +1,3 @@
-//
-//  Alerts.swift
-//  tictak
-//
-//  Created by Leonardo Nápoles on 8/7/25.
-//
-
 import SwiftUI
 
 struct AlertItem: Identifiable {
@@ -24,8 +17,8 @@ struct AlertContext {
                                        buttonTitle: Text("Rematch"))
     
     static let draw        = AlertItem(title: Text("Draw"),
-                                message: Text("You're both unbeatable!"),
-                                buttonTitle: Text("Try Again"))
+                                       message: Text("You're both unbeatable!"),
+                                       buttonTitle: Text("Try Again"))
     
-    
+    static let difficultyTitle = Text("Choose Difficulty")
 }
