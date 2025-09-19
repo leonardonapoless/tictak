@@ -9,6 +9,13 @@ enum Difficulty: String, CaseIterable, Identifiable {
 }
 
 final class GameViewModel: ObservableObject {
+    // Audio dependency
+    private let audioService: AudioService
+
+    init(audioService: AudioService = AudioService()) {
+        self.audioService = audioService
+    }
+
     let columns: [GridItem] = [GridItem(.flexible()),
                                GridItem(.flexible()),
                                GridItem(.flexible())]
@@ -25,7 +32,7 @@ final class GameViewModel: ObservableObject {
     @Published var selectedDifficulty: Difficulty? = nil
     @Published var needsDifficultySelection: Bool = true
     @Published var showDifficultyDialog: Bool = false
-    
+
     func startNewGame() {
         selectedDifficulty = nil
         needsDifficultySelection = true
@@ -44,14 +51,17 @@ final class GameViewModel: ObservableObject {
         if isSquareOccupied(in: moves, forIndex: position) { return }
         
         moves[position] = Move(player: .human, boardIndex: position)
+        audioService.playSound(named: SoundEffect.playerMove.fileName)
         
         if checkWinCondition(for: .human, in: moves) {
+            audioService.playSound(named: SoundEffect.playerWin.fileName)
             alertItem = AlertContext.humanWin
             return
         }
     
         if checkForDraw(in: moves) {
             alertItem = AlertContext.draw
+            audioService.playSound(named: SoundEffect.draw.fileName)
             return
         }
         
@@ -60,14 +70,17 @@ final class GameViewModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [self] in
             let computerPosition = determineComputerMovePosition(in: moves)
             moves[computerPosition] = Move(player: .computer, boardIndex: computerPosition)
+            audioService.playSound(named: SoundEffect.computerMove.fileName)
             isGameboardDisable = false
             
             if checkWinCondition(for: .computer, in: moves) {
                 alertItem = AlertContext.computerWin
+                audioService.playSound(named: SoundEffect.playerLose.fileName)
             }
             
             if checkForDraw(in: moves) {
                 alertItem = AlertContext.draw
+                audioService.playSound(named: SoundEffect.draw.fileName)
                 return
             }
         }
