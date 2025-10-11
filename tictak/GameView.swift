@@ -1,7 +1,10 @@
 import SwiftUI
+import UIKit
+import CoreHaptics
 
 struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
+    @State private var hapticsEngine = ContinuousHapticsEngine()
     
     var body: some View {
         GeometryReader { geometry in
@@ -52,6 +55,8 @@ struct GameView: View {
                         ZStack {
                             GameCircleView(proxy: geometry)
                             PlayerIndicator(systemImageName: viewModel.moves[i]?.indicator ?? "")
+                                .transition(.scale.combined(with: .opacity))
+                                .animation(.spring(response: 0.35, dampingFraction: 0.7), value: viewModel.moves[i]?.indicator)
                         }
                         .onTapGesture {
                             viewModel.processPlayerMove(for: i)
@@ -67,9 +72,19 @@ struct GameView: View {
         .onAppear {
             viewModel.startNewGame()
             viewModel.showDifficultyDialog = false
+            hapticsEngine.prepare()
         }
         .alert(item: $viewModel.alertItem) { alertItem in
-            Alert(
+            // trigger haptics
+            if alertItem.title == AlertContext.computerWin.title {
+                hapticsEngine.playContinuous(duration: 1.8, intensity: 0.35, sharpness: 0.2)
+            } else if alertItem.title == AlertContext.humanWin.title {
+                Haptics.success()
+            } else if alertItem.title == AlertContext.draw.title {
+                Haptics.warning()
+            }
+            
+            return Alert(
                 title: alertItem.title,
                 message: alertItem.message,
                 dismissButton: .default(alertItem.buttonTitle) {
@@ -109,12 +124,31 @@ struct GameCircleView: View {
 
 struct PlayerIndicator: View {
     var systemImageName: String
+    @State private var appear = false
+    
     var body: some View {
         Image(systemName: systemImageName)
             .resizable()
             .frame(width: 40, height: 40)
             .foregroundStyle(.white.opacity(0.95))
             .shadow(color: .black.opacity(0.25), radius: 3, x: 0, y: 1)
+            .scaleEffect(appear && !systemImageName.isEmpty ? 1.0 : 0.6)
+            .opacity(systemImageName.isEmpty ? 0 : 1)
+            .onChange(of: systemImageName) { _, newValue in
+                if !newValue.isEmpty {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        appear = true
+                    }
+                    Haptics.playLight()
+                }
+            }
+            .onAppear {
+                if !systemImageName.isEmpty {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        appear = true
+                    }
+                }
+            }
     }
 }
 
