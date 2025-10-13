@@ -55,7 +55,6 @@ final class GameViewModel: ObservableObject {
         isGameInProgress = true
         
         moves[position] = Move(player: .human, boardIndex: position)
-        audioService.playSound(named: SoundEffect.playerMove.fileName)
         
         if checkWinCondition(for: .human, in: moves) {
             audioService.playSound(named: SoundEffect.playerWin.fileName)
@@ -63,7 +62,7 @@ final class GameViewModel: ObservableObject {
             isGameInProgress = false
             return
         }
-    
+
         if checkForDraw(in: moves) {
             alertItem = AlertContext.draw
             audioService.playSound(named: SoundEffect.draw.fileName)
@@ -71,26 +70,28 @@ final class GameViewModel: ObservableObject {
             return
         }
         
+        // only play move sound if game didn't end
+        audioService.playSound(named: SoundEffect.playerMove.fileName)
+        
         isGameboardDisable = true
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [self] in
             let computerPosition = determineComputerMovePosition(in: moves)
             moves[computerPosition] = Move(player: .computer, boardIndex: computerPosition)
-            audioService.playSound(named: SoundEffect.computerMove.fileName)
-            isGameboardDisable = false
             
             if checkWinCondition(for: .computer, in: moves) {
                 alertItem = AlertContext.computerWin
                 audioService.playSound(named: SoundEffect.playerLose.fileName)
                 isGameInProgress = false
-            }
-            
-            if checkForDraw(in: moves) {
+            } else if checkForDraw(in: moves) {
                 alertItem = AlertContext.draw
                 audioService.playSound(named: SoundEffect.draw.fileName)
                 isGameInProgress = false
-                return
+            } else {
+                audioService.playSound(named: SoundEffect.computerMove.fileName)
             }
+            
+            isGameboardDisable = false
         }
     }
         
