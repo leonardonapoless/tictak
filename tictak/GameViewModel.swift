@@ -29,13 +29,15 @@ final class GameViewModel: ObservableObject {
     @Published var alertItem: AlertItem?
     
     // Difficulty state
-    @Published var selectedDifficulty: Difficulty? = nil
+    @Published var selectedDifficulty: Difficulty? = .easy
     @Published var needsDifficultySelection: Bool = true
     @Published var showDifficultyDialog: Bool = false
-
+    @Published var isGameInProgress: Bool = false
+    @Published var hasGameStarted: Bool = false
+    
     func startNewGame() {
-        selectedDifficulty = nil
-        needsDifficultySelection = true
+        selectedDifficulty = .easy
+        needsDifficultySelection = false
         resetGame()
         showDifficultyDialog = false
     }
@@ -50,18 +52,22 @@ final class GameViewModel: ObservableObject {
         guard selectedDifficulty != nil, !needsDifficultySelection else { return }
         if isSquareOccupied(in: moves, forIndex: position) { return }
         
+        isGameInProgress = true
+        
         moves[position] = Move(player: .human, boardIndex: position)
         audioService.playSound(named: SoundEffect.playerMove.fileName)
         
         if checkWinCondition(for: .human, in: moves) {
             audioService.playSound(named: SoundEffect.playerWin.fileName)
             alertItem = AlertContext.humanWin
+            isGameInProgress = false
             return
         }
     
         if checkForDraw(in: moves) {
             alertItem = AlertContext.draw
             audioService.playSound(named: SoundEffect.draw.fileName)
+            isGameInProgress = false
             return
         }
         
@@ -76,11 +82,13 @@ final class GameViewModel: ObservableObject {
             if checkWinCondition(for: .computer, in: moves) {
                 alertItem = AlertContext.computerWin
                 audioService.playSound(named: SoundEffect.playerLose.fileName)
+                isGameInProgress = false
             }
             
             if checkForDraw(in: moves) {
                 alertItem = AlertContext.draw
                 audioService.playSound(named: SoundEffect.draw.fileName)
+                isGameInProgress = false
                 return
             }
         }
@@ -197,5 +205,6 @@ final class GameViewModel: ObservableObject {
         moves = Array(repeating: nil, count: 9)
         isGameboardDisable = false
         alertItem = nil
+        isGameInProgress = false
     }
 }
