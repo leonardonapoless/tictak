@@ -2,9 +2,54 @@ import SwiftUI
 import UIKit
 import CoreHaptics
 
+
+struct DifficultyMenuView: View {
+    @Binding var selectedDifficulty: Difficulty?
+    @Binding var needsDifficultySelection: Bool
+    var selectDifficultyAction: (Difficulty) -> Void
+    var isGameboardDisabled: Bool
+    
+    var body: some View {
+        Picker("Difficulty", selection: $selectedDifficulty) {
+            ForEach(Difficulty.allCases) { difficulty in
+                Text(difficulty.rawValue).tag(difficulty as Difficulty?)
+            }
+        }
+        .pickerStyle(.segmented)
+        .glassEffect()
+        .frame(width: 240, height: 50)
+        .disabled(isGameboardDisabled)
+        .opacity(isGameboardDisabled ? 0.5 : 1.0)
+    }
+}
+
+
+struct DifficultyStatusView: View {
+    @Binding var selectedDifficulty: Difficulty?
+    @Binding var needsDifficultySelection: Bool
+    
+    var body: some View {
+        Group {
+            if let difficulty = selectedDifficulty {
+                Text(difficulty.rawValue)
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, 8)
+                    .id(difficulty.id)
+            }
+            
+            if needsDifficultySelection {
+                Text("Choose a difficulty to start playing")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
 struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
-    @State private var hapticsEngine = ContinuousHapticsEngine()
+    @State private var hapticsEngine: ContinuousHapticsEngine?
     
     var body: some View {
         GeometryReader { geometry in
@@ -19,35 +64,18 @@ struct GameView: View {
                 Spacer()
 
                 VStack(spacing: 12) {
-                    Menu {
-                        Button(Difficulty.easy.rawValue) { viewModel.selectDifficulty(.easy) }
-                        Button(Difficulty.medium.rawValue) { viewModel.selectDifficulty(.medium) }
-                        Button(Difficulty.hard.rawValue) { viewModel.selectDifficulty(.hard) }
-                    } label: {
-                        GlassRoundedRect(cornerRadius: 16)
-                            .frame(width: 160, height: 44)
-                            .overlay(
-                                Text("Difficulty")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.white.opacity(0.9))
-                            )
-                    }
-                    
-                    if let difficulty = viewModel.selectedDifficulty {
-                        Text(difficulty.rawValue)
-                            .font(.headline)
-                            .foregroundStyle(.secondary)
-                            .padding(.vertical, 8)
-                    }
-                    
-                    if viewModel.needsDifficultySelection {
-                        Text("Choose a difficulty to start playing")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    DifficultyMenuView(
+                        selectedDifficulty: $viewModel.selectedDifficulty,
+                        needsDifficultySelection: $viewModel.needsDifficultySelection,
+                        selectDifficultyAction: viewModel.selectDifficulty,
+                        isGameboardDisabled: viewModel.isGameInProgress
+                    )
+                    DifficultyStatusView(
+                        selectedDifficulty: $viewModel.selectedDifficulty,
+                        needsDifficultySelection: $viewModel.needsDifficultySelection
+                    )
                 }
                 .padding(.bottom, 20)
-                
                 Spacer()
                 
                 LazyVGrid(columns: viewModel.columns, spacing: 12) {
@@ -72,12 +100,16 @@ struct GameView: View {
         .onAppear {
             viewModel.startNewGame()
             viewModel.showDifficultyDialog = false
-            hapticsEngine.prepare()
+            
+            if hapticsEngine == nil {
+                hapticsEngine = ContinuousHapticsEngine()
+                hapticsEngine?.prepare()
+            }
         }
         .alert(item: $viewModel.alertItem) { alertItem in
             // trigger haptics
             if alertItem.title == AlertContext.computerWin.title {
-                hapticsEngine.playContinuous(duration: 1.8, intensity: 0.35, sharpness: 0.2)
+                hapticsEngine?.playContinuous(duration: 1.8, intensity: 0.35, sharpness: 0.2)
             } else if alertItem.title == AlertContext.humanWin.title {
                 Haptics.success()
             } else if alertItem.title == AlertContext.draw.title {
@@ -213,21 +245,18 @@ private struct GlassStroke: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .overlay(
+            .overlay(alignment: .topLeading) {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .strokeBorder(
                         LinearGradient(
-                            colors: [
-                                .white.opacity(0.65),
-                                .white.opacity(0.2)
-                            ],
+                            colors: [.white.opacity(0.65), .white.opacity(0.2)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
                         lineWidth: lineWidth
                     )
-            )
-            .overlay(
+            }
+            .overlay(alignment: .top) {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .stroke(.black.opacity(0.18), lineWidth: 0.5)
                     .blur(radius: 1.2)
@@ -241,7 +270,7 @@ private struct GlassStroke: ViewModifier {
                                 )
                             )
                     )
-            )
+            }
             .shadow(color: .black.opacity(0.25), radius: 10, x: 0, y: 6)
             .shadow(color: .white.opacity(0.25), radius: 2, x: 0, y: -1)
     }
