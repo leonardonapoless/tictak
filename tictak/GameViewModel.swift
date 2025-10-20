@@ -36,6 +36,9 @@ final class GameViewModel: ObservableObject {
     @Published var hasGameStarted: Bool = false
     
     func startNewGame() {
+        // stop any win/lose/draw sound that might still be playing
+        audioService.stopNonMoveSounds()
+        
         selectedDifficulty = .easy
         needsDifficultySelection = false
         resetGame()
