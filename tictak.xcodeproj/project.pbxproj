@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		AD6419072F32E7470068461F /* Vortex in Frameworks */ = {isa = PBXBuildFile; productRef = AD6419062F32E7470068461F /* Vortex */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		AD1359AB2E42AC6300D20294 /* tictak.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tictak.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AD6419072F32E7470068461F /* Vortex in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = tictak;
 			packageProductDependencies = (
+				AD6419062F32E7470068461F /* Vortex */,
 			);
 			productName = tictak;
 			productReference = AD1359AB2E42AC6300D20294 /* tictak.app */;
@@ -95,6 +101,7 @@
 			mainGroup = AD1359A22E42AC6300D20294;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				AD6419052F32E7470068461F /* XCRemoteSwiftPackageReference "Vortex" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AD1359AC2E42AC6300D20294 /* Products */;
@@ -328,6 +335,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AD6419052F32E7470068461F /* XCRemoteSwiftPackageReference "Vortex" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/twostraws/Vortex";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AD6419062F32E7470068461F /* Vortex */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AD6419052F32E7470068461F /* XCRemoteSwiftPackageReference "Vortex" */;
+			productName = Vortex;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AD1359A32E42AC6300D20294 /* Project object */;
 }

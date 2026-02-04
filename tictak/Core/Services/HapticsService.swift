@@ -4,7 +4,7 @@ import CoreHaptics
 
 // MARK: - Tap haptics
 
-enum Haptics {
+@MainActor enum Haptics {
     static func playLight() {
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
@@ -29,7 +29,7 @@ enum Haptics {
 
 // MARK: - Long haptics
 
-struct ContinuousHapticsEngine {
+@MainActor struct ContinuousHapticsEngine {
     private var engine: CHHapticEngine?
     private var supportsHaptics: Bool = false
     

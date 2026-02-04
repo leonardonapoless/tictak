@@ -1,11 +1,11 @@
 import SwiftUI
 
 @main
-struct tictakApp: App {
+struct TicTakApp: App {
     var body: some Scene {
         WindowGroup {
             GameView()
-                .preferredColorScheme(.dark)
+
         }
     }
 }

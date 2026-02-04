@@ -1,19 +1,10 @@
 import SwiftUI
 
-enum Difficulty: String, CaseIterable, Identifiable {
-    case easy = "Easy"
-    case medium = "Medium"
-    case hard = "Hard"
-    
-    var id: String { rawValue }
-}
-
-final class GameViewModel: ObservableObject {
-    // Audio dependency
+@MainActor final class GameViewModel: ObservableObject {
     private let audioService: AudioService
 
-    init(audioService: AudioService = AudioService()) {
-        self.audioService = audioService
+    init(audioService: AudioService? = nil) {
+        self.audioService = audioService ?? AudioService()
     }
 
     let columns: [GridItem] = [GridItem(.flexible()),
@@ -55,40 +46,51 @@ final class GameViewModel: ObservableObject {
         isGameInProgress = true
         
         moves[position] = Move(player: .human, boardIndex: position)
+        audioService.playSound(named: SoundEffect.playerMove.fileName)
         
         if checkWinCondition(for: .human, in: moves) {
-            audioService.playSound(named: SoundEffect.playerWin.fileName)
-            alertItem = AlertContext.humanWin
-            isGameInProgress = false
+            isGameboardDisable = true
+            Task {
+                try? await Task.sleep(for: .seconds(0.5))
+                audioService.playSound(named: SoundEffect.playerWin.fileName)
+                alertItem = AlertContext.humanWin
+                isGameInProgress = false
+                isGameboardDisable = false
+            }
             return
         }
 
         if checkForDraw(in: moves) {
-            alertItem = AlertContext.draw
-            audioService.playSound(named: SoundEffect.draw.fileName)
-            isGameInProgress = false
+            isGameboardDisable = true
+            Task {
+                try? await Task.sleep(for: .seconds(0.5))
+                audioService.playSound(named: SoundEffect.draw.fileName)
+                alertItem = AlertContext.draw
+                isGameInProgress = false
+                isGameboardDisable = false
+            }
             return
         }
         
-        // only play move sound if game didn't end
-        audioService.playSound(named: SoundEffect.playerMove.fileName)
-        
         isGameboardDisable = true
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [self] in
+        Task {
+            try? await Task.sleep(for: .seconds(0.8))
+            
             let computerPosition = determineComputerMovePosition(in: moves)
             moves[computerPosition] = Move(player: .computer, boardIndex: computerPosition)
+            audioService.playSound(named: SoundEffect.computerMove.fileName)
             
             if checkWinCondition(for: .computer, in: moves) {
-                alertItem = AlertContext.computerWin
+                try? await Task.sleep(for: .seconds(0.5))
                 audioService.playSound(named: SoundEffect.playerLose.fileName)
+                alertItem = AlertContext.computerWin
                 isGameInProgress = false
             } else if checkForDraw(in: moves) {
-                alertItem = AlertContext.draw
+                try? await Task.sleep(for: .seconds(0.5))
                 audioService.playSound(named: SoundEffect.draw.fileName)
+                alertItem = AlertContext.draw
                 isGameInProgress = false
-            } else {
-                audioService.playSound(named: SoundEffect.computerMove.fileName)
             }
             
             isGameboardDisable = false

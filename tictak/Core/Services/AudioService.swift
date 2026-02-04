@@ -8,7 +8,7 @@
 import Foundation
 import AVFoundation
 
-class AudioService {
+@MainActor final class AudioService {
     private var audioPlayer: AVAudioPlayer?
     
     func playSound(named fileName: String) {
