@@ -135,17 +135,17 @@ import SwiftUI
     }
     
     private func determineMediumMove(in moves: [Move?]) -> Int {
+        if Int.random(in: 0..<100) < 15 {
+             return availableMoves(in: moves).randomElement() ?? 0
+        }
+
         if let win = immediateWinIndex(for: .computer, in: moves) { return win }
         if let block = immediateWinIndex(for: .human, in: moves) { return block }
         
         let center = 4
         if !isSquareOccupied(in: moves, forIndex: center) { return center }
         
-        var movePosition = Int.random(in: 0..<9)
-        while isSquareOccupied(in: moves, forIndex: movePosition) {
-            movePosition = Int.random(in: 0..<9)
-        }
-        return movePosition
+        return availableMoves(in: moves).randomElement() ?? 0
     }
     
     private func determineHardMove(in moves: [Move?]) -> Int {
