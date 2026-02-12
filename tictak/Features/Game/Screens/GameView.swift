@@ -7,18 +7,10 @@ struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
     @State private var hapticsEngine: ContinuousHapticsEngine?
     @Environment(\.colorScheme) var colorScheme
-    @State private var confettiSystem: VortexSystem?
+    @State private var confettiSystem: VortexSystem = .makeConfettiSystem(isDarkMode: true)
     
     private func updateConfetti() {
-        confettiSystem = VortexSystem.confetti
-            .speed(0.4)
-            .speedVariation(0.2)
-            .position([0.5, 0.04])
-            .colors(.random(
-                colorScheme == .dark ? .white : .black.opacity(0.8),
-                .green.opacity(0.8),
-                colorScheme == .dark ? .white : .black.opacity(0.8)
-            ))
+        confettiSystem = .makeConfettiSystem(isDarkMode: colorScheme == .dark)
     }
     
     var body: some View {
@@ -68,20 +60,19 @@ struct GameView: View {
                 }
                 .padding()
                 
-                if let system = confettiSystem {
-                    VortexView(system) {
-                        Rectangle()
-                            .fill(.white)
-                            .frame(width: 16, height: 16)
-                            .tag("square")
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 16, height: 16)
-                            .tag("circle")
-                    }
-                    .allowsHitTesting(false)
-                    .ignoresSafeArea()
+                VortexView(confettiSystem) {
+                    Rectangle()
+                        .fill(.white)
+                        .frame(width: 16, height: 16)
+                        .tag("square")
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 16, height: 16)
+                        .tag("circle")
                 }
+                .drawingGroup()
+                .allowsHitTesting(false)
+                .ignoresSafeArea()
             }
             .onChange(of: viewModel.alertItem) { _, newItem in
                 if newItem?.title == AlertContext.humanWin.title {
